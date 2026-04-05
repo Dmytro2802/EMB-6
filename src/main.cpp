@@ -5,8 +5,8 @@
 #define FLASH_ON_MS  150
 #define FLASH_OFF_MS 100
 
-static bool     redTurn   = true;   // чия черга: true=червоний, false=синій
-static bool     ledOn     = false;  // LED зараз горить чи ні
+static bool     redTurn   = true;   
+static bool     ledOn     = false;  
 static uint32_t startTime = 0;
 
 void setup() {
@@ -25,12 +25,10 @@ void loop() {
   startTime += timeout;
 
   if (ledOn) {
-    // гасимо поточний LED і передаємо чергу іншому
     digitalWrite(redTurn ? RED_LED : BLUE_LED, LOW);
-    redTurn = !redTurn;  // міняємо чергу
+    redTurn = !redTurn; 
     ledOn   = false;
   } else {
-    // вмикаємо поточний LED
     digitalWrite(redTurn ? RED_LED : BLUE_LED, HIGH);
     ledOn = true;
   }
