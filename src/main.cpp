@@ -1,35 +1,49 @@
 #include <Arduino.h>
-#define RED_LED  4
-#define BLUE_LED 5
 
-#define FLASH_ON_MS  150
-#define FLASH_OFF_MS 100
+#define RED_LED      4
+#define BLUE_LED     5
+#define EXT_BUTTON   2
+#define BOOT_BUTTON  0
 
-static bool     redTurn   = true;   
-static bool     ledOn     = false;  
-static uint32_t startTime = 0;
+#define FAST_DELAY   100
+#define SLOW_DELAY   500
+#define DEBOUNCE_MS  50
+
+volatile int blinkDelay = SLOW_DELAY;
+volatile unsigned long lastPressTime = 0;
+
+void IRAM_ATTR onExtButton() {
+  unsigned long now = millis();
+  if (now - lastPressTime > DEBOUNCE_MS) {
+    blinkDelay = FAST_DELAY;
+    lastPressTime = now;
+  }
+}
+
+void IRAM_ATTR onBootButton() {
+  unsigned long now = millis();
+  if (now - lastPressTime > DEBOUNCE_MS) {
+    blinkDelay = SLOW_DELAY;
+    lastPressTime = now;
+  }
+}
 
 void setup() {
-  pinMode(RED_LED,  OUTPUT);
-  pinMode(BLUE_LED, OUTPUT);
-  digitalWrite(RED_LED,  LOW);
-  digitalWrite(BLUE_LED, LOW);
-  startTime = millis();
+  pinMode(RED_LED,     OUTPUT);
+  pinMode(BLUE_LED,    OUTPUT);
+  pinMode(EXT_BUTTON,  INPUT_PULLUP);
+  pinMode(BOOT_BUTTON, INPUT_PULLUP);
+
+  attachInterrupt(digitalPinToInterrupt(EXT_BUTTON),  onExtButton,  FALLING);
+  attachInterrupt(digitalPinToInterrupt(BOOT_BUTTON), onBootButton, FALLING);
 }
 
 void loop() {
-  uint32_t timeout = ledOn ? FLASH_ON_MS : FLASH_OFF_MS;
+  digitalWrite(RED_LED,  HIGH);
+  digitalWrite(BLUE_LED, LOW);
+  delay(blinkDelay);
 
-  if (millis() - startTime < timeout) return;
-
-  startTime += timeout;
-
-  if (ledOn) {
-    digitalWrite(redTurn ? RED_LED : BLUE_LED, LOW);
-    redTurn = !redTurn; 
-    ledOn   = false;
-  } else {
-    digitalWrite(redTurn ? RED_LED : BLUE_LED, HIGH);
-    ledOn = true;
-  }
+  digitalWrite(RED_LED,  LOW);
+  digitalWrite(BLUE_LED, HIGH);
+  delay(blinkDelay);
 }
